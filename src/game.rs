@@ -101,22 +101,29 @@ impl Game {
 
     pub fn step_plate_appearance(&mut self) {
         let event = event::Event::random_event();
+        let mut runs_scored = 0;
         match event {
             event::Event::Out | event::Event::Flyout | event::Event::Groundout | event::Event::Strikeout => {
                 self.outs += 1;
             }
             event::Event::Walk => {
+                runs_scored = self.batter_bases(1);
             }
             event::Event::Single => {
+                runs_scored = self.batter_bases(1);
             }
             event::Event::Double => {
+                runs_scored = self.batter_bases(2);
             }
             event::Event::Triple => {
+                runs_scored = self.batter_bases(3);
             }
             event::Event::HomeRun => {
-                self.add_runs(1);
+                runs_scored = self.batter_bases(4);
             }
         }
+
+        self.add_runs(runs_scored);
 
         if self.outs == 3 {
             match self.active_team {
@@ -130,6 +137,87 @@ impl Game {
             }
             self.outs = 0;
         }
+    }
+
+    fn batter_bases(&mut self, bases: u8) -> u8 {
+        let mut runs_scored = 0;
+
+        match self.bases {
+            BaseState::Empty => {
+                match bases {
+                    1 => { self.bases = BaseState::First }
+                    2 => { self.bases = BaseState::Second }
+                    3 => { self.bases = BaseState::Third }
+                    4 => { runs_scored += 1 }
+                    _ => {},
+                }
+            }
+            BaseState::First => {
+                match bases {
+                    1 => { self.bases = BaseState::FirstSecond }
+                    2 => { self.bases = BaseState::FirstThird }
+                    3 => { self.bases = BaseState::Third; runs_scored += 1 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 2 }
+                    _ => {},
+                }
+            }
+            BaseState::Second => {
+                match bases {
+                    1 => { self.bases = BaseState::FirstThird }
+                    2 => { runs_scored += 1 }
+                    3 => { self.bases = BaseState::Third; runs_scored += 1 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 2 }
+                    _ => {},
+                }
+            }
+            BaseState::Third => {
+                match bases {
+                    1 => { self.bases = BaseState::First; runs_scored += 1 }
+                    2 => { self.bases = BaseState::Second; runs_scored += 1 }
+                    3 => { self.bases = BaseState::Third; runs_scored += 1 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 2 }
+                    _ => {},
+                }
+            }
+            BaseState::FirstSecond => {
+                match bases {
+                    1 => { self.bases = BaseState::Loaded }
+                    2 => { self.bases = BaseState::SecondThird; runs_scored += 1 }
+                    3 => { self.bases = BaseState::Third; runs_scored += 2 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 3 }
+                    _ => {},
+                }
+            }
+            BaseState::FirstThird => {
+                match bases {
+                    1 => { self.bases = BaseState::FirstSecond; runs_scored += 1 }
+                    2 => { self.bases = BaseState::SecondThird; runs_scored += 1 }
+                    3 => { self.bases = BaseState::Third; runs_scored += 2 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 3 }
+                    _ => {},
+                }
+            }
+            BaseState::SecondThird => {
+                match bases {
+                    1 => { self.bases = BaseState::FirstThird; runs_scored += 1 }
+                    2 => { self.bases = BaseState::Second; runs_scored += 2 }
+                    3 => { self.bases = BaseState::Third; runs_scored += 2 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 3 }
+                    _ => {},
+                }
+            }
+            BaseState::Loaded => {
+                match bases {
+                    1 => { self.bases = BaseState::Empty; runs_scored += 1 }
+                    2 => { self.bases = BaseState::Empty; runs_scored += 2 }
+                    3 => { self.bases = BaseState::Empty; runs_scored += 3 }
+                    4 => { self.bases = BaseState::Empty; runs_scored += 4 }
+                    _ => {},
+                }
+            }
+        }
+
+        return runs_scored;
     }
 
     fn add_runs(&mut self, runs: u8) {
