@@ -1,0 +1,11 @@
+---
+language: rust
+rust:
+  - stable
+  - beta
+
+script:
+  - cargo build --release --verbose
+
+after_success:
+  - timeout 30s ./target/release/baseball-sim
