@@ -10,5 +10,6 @@ fn main() {
     println!("Starting game");
     let mut g = game::Game::new();
     g.finish_game();
-    println!("Finised game");
+    println!("Finished game");
+    g.result();
 }

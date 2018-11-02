@@ -77,6 +77,21 @@ impl Game {
         Game::default()
     }
 
+    pub fn result(&self) {
+        if !self.finished {
+            return;
+        }
+        if self.away_score > self.home_score {
+            println!("Away team won, {}-{}", self.away_score, self.home_score);
+        }
+        else if self.home_score > self.away_score {
+            println!("Home team won, {}-{}", self.home_score, self.away_score);
+        }
+        else {
+            println!("Tie game!");
+        }
+    }
+
     pub fn finish_game(&mut self) {
         while !self.finished {
             self.step_plate_appearance();
