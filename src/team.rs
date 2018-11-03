@@ -18,7 +18,7 @@ impl Team {
     pub fn league_average() -> Self {
         let mut players = Vec::new();
         for idx in 0..9 {
-            players.push(player::Player::new(&format!("Player {}", idx)));
+            players.push(player::Player::new(&format!("Player {}", idx), idx));
         }
         let team = Team {
             lineup: players,
