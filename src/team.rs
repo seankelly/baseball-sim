@@ -31,4 +31,8 @@ impl Team {
         };
         return team;
     }
+
+    pub fn lineup(&self, idx: usize) -> &player::Player {
+        &self.lineup[idx]
+    }
 }
