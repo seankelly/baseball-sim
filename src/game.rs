@@ -7,8 +7,10 @@ use team;
 pub struct Game {
     away_team: team::Team,
     away_score: u8,
+    away_batter: u8,
     home_team: team::Team,
     home_score: u8,
+    home_batter: u8,
     active_team: ActiveTeam,
     active_batter: CurrentBatter,
     inning: u8,
@@ -74,7 +76,10 @@ impl Default for CurrentBatter {
 
 impl Game {
     pub fn new() -> Self {
-        Game::default()
+        let mut game = Game::default();
+        game.away_batter = 0;
+        game.home_batter = 0;
+        return game;
     }
 
     pub fn result(&self) {
@@ -114,6 +119,7 @@ impl Game {
         }
 
         self.add_runs(runs_scored);
+        self.next_batter();
 
         if self.outs == 3 {
             match self.active_team {
@@ -293,6 +299,25 @@ impl Game {
             ActiveTeam::Home => {
                 println!("home team scored");
                 self.home_score += runs;
+            }
+        }
+    }
+
+    fn next_batter(&mut self) {
+        let mut batter = match self.active_team {
+            ActiveTeam::Away => { self.away_batter }
+            ActiveTeam::Home => { self.home_batter }
+        };
+        batter += 1;
+        if batter > 8 {
+            batter = 0;
+        }
+        match self.active_team {
+            ActiveTeam::Away => {
+                self.away_batter = batter;
+            }
+            ActiveTeam::Home => {
+                self.home_batter = batter;
             }
         }
     }
