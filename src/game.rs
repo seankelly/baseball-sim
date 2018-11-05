@@ -103,6 +103,7 @@ impl Game {
         while !self.finished {
             self.step_plate_appearance();
             self.check_game_over();
+            self.check_next_inning();
         }
     }
 
@@ -120,19 +121,6 @@ impl Game {
 
         self.add_runs(runs_scored);
         self.next_batter();
-
-        if self.outs == 3 {
-            match self.active_team {
-                ActiveTeam::Away => {
-                    self.active_team = ActiveTeam::Home;
-                }
-                ActiveTeam::Home => {
-                    self.inning = self.inning + 1;
-                    self.active_team = ActiveTeam::Away;
-                }
-            }
-            self.outs = 0;
-        }
     }
 
     fn batter_bases(&mut self, event: event::Event) -> u8 {
@@ -342,5 +330,23 @@ impl Game {
             return true;
         }
         return false;
+    }
+
+    fn check_next_inning(&mut self) {
+        if self.finished {
+            return;
+        }
+        if self.outs == 3 {
+            match self.active_team {
+                ActiveTeam::Away => {
+                    self.active_team = ActiveTeam::Home;
+                }
+                ActiveTeam::Home => {
+                    self.inning = self.inning + 1;
+                    self.active_team = ActiveTeam::Away;
+                }
+            }
+            self.outs = 0;
+        }
     }
 }
