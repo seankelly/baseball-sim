@@ -300,10 +300,7 @@ impl Game {
     }
 
     fn next_batter(&mut self) {
-        let mut batter = match self.active_team {
-            ActiveTeam::Away => { self.away_batter }
-            ActiveTeam::Home => { self.home_batter }
-        };
+        let mut batter = self.active_batter();
         batter += 1;
         if batter > 8 {
             batter = 0;
@@ -315,6 +312,13 @@ impl Game {
             ActiveTeam::Home => {
                 self.home_batter = batter;
             }
+        }
+    }
+
+    fn active_batter(&self) -> u8 {
+        match self.active_team {
+            ActiveTeam::Away => { self.away_batter }
+            ActiveTeam::Home => { self.home_batter }
         }
     }
 
