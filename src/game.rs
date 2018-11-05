@@ -152,6 +152,7 @@ impl Game {
                 self.bases = BaseState::Third;
             }
             (BaseState::Empty, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 1;
             }
             (BaseState::Empty, _) => {}
@@ -169,6 +170,7 @@ impl Game {
                 runs_scored += 1;
             }
             (BaseState::First, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 2;
             }
             (BaseState::First, _) => {}
@@ -187,6 +189,7 @@ impl Game {
                 runs_scored += 1;
             }
             (BaseState::Second, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 2;
             }
             (BaseState::Second, _) => {}
@@ -206,6 +209,7 @@ impl Game {
                 runs_scored += 1;
             }
             (BaseState::Third, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 2;
             }
             (BaseState::Third, _) => {}
@@ -224,6 +228,7 @@ impl Game {
                 runs_scored += 2;
             }
             (BaseState::FirstSecond, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 3;
             }
             (BaseState::FirstSecond, _) => {}
@@ -243,6 +248,7 @@ impl Game {
                 runs_scored += 2;
             }
             (BaseState::FirstThird, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 3;
             }
             (BaseState::FirstThird, _) => {}
@@ -262,6 +268,7 @@ impl Game {
                 runs_scored += 2;
             }
             (BaseState::SecondThird, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 3;
             }
             (BaseState::SecondThird, _) => {}
@@ -282,6 +289,7 @@ impl Game {
                 runs_scored += 3;
             }
             (BaseState::Loaded, event::Event::HomeRun) => {
+                self.bases = BaseState::Empty;
                 runs_scored += 4;
             }
             (BaseState::Loaded, _) => {}
