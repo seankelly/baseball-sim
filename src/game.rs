@@ -88,11 +88,11 @@ impl Game {
         }
         if self.away_score > self.home_score {
             println!("Away team won, {}-{}, in {} innings",
-                     self.away_score, self.home_score, self.inning - 1);
+                     self.away_score, self.home_score, self.inning);
         }
         else if self.home_score > self.away_score {
             println!("Home team won, {}-{}, in {} innings",
-                     self.home_score, self.away_score, self.inning - 1);
+                     self.home_score, self.away_score, self.inning);
         }
         else {
             println!("Tie game!");
