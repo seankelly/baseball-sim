@@ -322,12 +322,25 @@ impl Game {
         if self.finished {
             return true;
         }
-        else if self.inning < 10 {
+        else if self.inning < 9 {
             return false;
         }
-        else if self.home_score != self.away_score {
-            self.finished = true;
-            return true;
+        else {
+            match self.active_team {
+                ActiveTeam::Away => {}
+                ActiveTeam::Home => {
+                    // Home team can win immediately in the bottom of the ninth or later.
+                    if self.home_score > self.away_score {
+                        self.finished = true;
+                        return true;
+                    }
+                    // Away team can only win after the inning is completely over.
+                    else if self.away_score > self.home_score && self.outs == 3 {
+                        self.finished = true;
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }
