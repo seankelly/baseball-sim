@@ -359,6 +359,7 @@ impl Game {
                     self.active_team = ActiveTeam::Away;
                 }
             }
+            self.bases = BaseState::Empty;
             self.outs = 0;
         }
     }
