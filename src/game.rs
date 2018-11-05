@@ -22,13 +22,13 @@ pub struct Game {
 
 enum BaseState {
     Empty,
-    First,
-    Second,
-    Third,
-    FirstSecond,
-    FirstThird,
-    SecondThird,
-    Loaded,
+    First(u8),
+    Second(u8),
+    Third(u8),
+    FirstSecond(u8, u8),
+    FirstThird(u8, u8),
+    SecondThird(u8, u8),
+    Loaded(u8, u8, u8),
 }
 
 enum GameStatus {
@@ -109,181 +109,183 @@ impl Game {
 
     pub fn step_plate_appearance(&mut self) {
         let event = event::Event::random_event();
-        let mut runs_scored = 0;
         match event {
             event::Event::Out | event::Event::Flyout | event::Event::Groundout | event::Event::Strikeout => {
                 self.outs += 1;
             }
             _ => {
-                runs_scored = self.batter_bases(event);
+                let (runs_scored, next_base_state) = self.batter_bases(event);
+                self.bases = next_base_state;
+                self.add_runs(runs_scored);
             }
         }
 
-        self.add_runs(runs_scored);
         self.next_batter();
     }
 
-    fn batter_bases(&mut self, event: event::Event) -> u8 {
+    fn batter_bases(&mut self, event: event::Event) -> (u8, BaseState) {
         let mut runs_scored = 0;
+        let mut next_base_state = BaseState::Empty;
 
+        let batter = self.active_batter();
         match (&self.bases, event) {
             (BaseState::Empty, event::Event::Walk) => {
-                self.bases = BaseState::First;
+                next_base_state = BaseState::First(batter);
             }
             (BaseState::Empty, event::Event::Single) => {
-                self.bases = BaseState::First;
+                next_base_state = BaseState::First(batter);
             }
             (BaseState::Empty, event::Event::Double) => {
-                self.bases = BaseState::Second;
+                next_base_state = BaseState::Second(batter);
             }
             (BaseState::Empty, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+                next_base_state = BaseState::Third(batter);
             }
             (BaseState::Empty, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+                next_base_state = BaseState::Empty;
                 runs_scored += 1;
             }
             (BaseState::Empty, _) => {}
-            (BaseState::First, event::Event::Walk) => {
-                self.bases = BaseState::FirstSecond;
+            (BaseState::First(runner1), event::Event::Walk) => {
+                next_base_state = BaseState::FirstSecond(batter, *runner1);
             }
-            (BaseState::First, event::Event::Single) => {
-                self.bases = BaseState::FirstSecond;
+            (BaseState::First(runner1), event::Event::Single) => {
+                next_base_state = BaseState::FirstSecond(batter, *runner1);
             }
-            (BaseState::First, event::Event::Double) => {
-                self.bases = BaseState::SecondThird;
+            (BaseState::First(runner1), event::Event::Double) => {
+                next_base_state = BaseState::SecondThird(batter, *runner1);
             }
-            (BaseState::First, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::First(_), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 1;
             }
-            (BaseState::First, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::First(_), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 2;
             }
-            (BaseState::First, _) => {}
-            (BaseState::Second, event::Event::Walk) => {
-                self.bases = BaseState::FirstSecond;
+            (BaseState::First(_), _) => {}
+            (BaseState::Second(runner2), event::Event::Walk) => {
+                next_base_state = BaseState::FirstSecond(batter, *runner2);
             }
-            (BaseState::Second, event::Event::Single) => {
-                self.bases = BaseState::FirstThird;
+            (BaseState::Second(runner2), event::Event::Single) => {
+                next_base_state = BaseState::FirstThird(batter, *runner2);
             }
-            (BaseState::Second, event::Event::Double) => {
-                self.bases = BaseState::Second;
+            (BaseState::Second(runner2), event::Event::Double) => {
+                next_base_state = BaseState::Second(batter);
                 runs_scored += 1;
             }
-            (BaseState::Second, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::Second(_), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 1;
             }
-            (BaseState::Second, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::Second(_), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 2;
             }
-            (BaseState::Second, _) => {}
-            (BaseState::Third, event::Event::Walk) => {
-                self.bases = BaseState::FirstThird;
+            (BaseState::Second(_), _) => {}
+            (BaseState::Third(runner3), event::Event::Walk) => {
+                next_base_state = BaseState::FirstThird(batter, *runner3);
             }
-            (BaseState::Third, event::Event::Single) => {
-                self.bases = BaseState::First;
+            (BaseState::Third(runner3), event::Event::Single) => {
+                next_base_state = BaseState::First(batter);
                 runs_scored += 1;
             }
-            (BaseState::Third, event::Event::Double) => {
-                self.bases = BaseState::Second;
+            (BaseState::Third(runner3), event::Event::Double) => {
+                next_base_state = BaseState::Second(batter);
                 runs_scored += 1;
             }
-            (BaseState::Third, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::Third(_), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 1;
             }
-            (BaseState::Third, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::Third(_), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 2;
             }
-            (BaseState::Third, _) => {}
-            (BaseState::FirstSecond, event::Event::Walk) => {
-                self.bases = BaseState::Loaded;
+            (BaseState::Third(_), _) => {}
+            (BaseState::FirstSecond(runner1, runner2), event::Event::Walk) => {
+                next_base_state = BaseState::Loaded(batter, *runner1, *runner2);
             }
-            (BaseState::FirstSecond, event::Event::Single) => {
-                self.bases = BaseState::Loaded;
+            (BaseState::FirstSecond(runner1, runner2), event::Event::Single) => {
+                next_base_state = BaseState::Loaded(batter, *runner1, *runner2);
             }
-            (BaseState::FirstSecond, event::Event::Double) => {
-                self.bases = BaseState::SecondThird;
+            (BaseState::FirstSecond(runner1, runner2), event::Event::Double) => {
+                next_base_state = BaseState::SecondThird(batter, *runner1);
                 runs_scored += 1;
             }
-            (BaseState::FirstSecond, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::FirstSecond(_, _), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 2;
             }
-            (BaseState::FirstSecond, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::FirstSecond(_, _), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 3;
             }
-            (BaseState::FirstSecond, _) => {}
-            (BaseState::FirstThird, event::Event::Walk) => {
-                self.bases = BaseState::Loaded;
+            (BaseState::FirstSecond(_, _), _) => {}
+            (BaseState::FirstThird(runner1, runner3), event::Event::Walk) => {
+                next_base_state = BaseState::Loaded(batter, *runner1, *runner3);
             }
-            (BaseState::FirstThird, event::Event::Single) => {
-                self.bases = BaseState::FirstSecond;
+            (BaseState::FirstThird(runner1, _), event::Event::Single) => {
+                next_base_state = BaseState::FirstSecond(batter, *runner1);
                 runs_scored += 1
             }
-            (BaseState::FirstThird, event::Event::Double) => {
-                self.bases = BaseState::SecondThird;
+            (BaseState::FirstThird(runner1, _), event::Event::Double) => {
+                next_base_state = BaseState::SecondThird(batter, *runner1);
                 runs_scored += 1;
             }
-            (BaseState::FirstThird, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::FirstThird(_, _), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 2;
             }
-            (BaseState::FirstThird, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::FirstThird(_, _), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 3;
             }
-            (BaseState::FirstThird, _) => {}
-            (BaseState::SecondThird, event::Event::Walk) => {
-                self.bases = BaseState::Loaded;
+            (BaseState::FirstThird(_, _), _) => {}
+            (BaseState::SecondThird(runner2, runner3), event::Event::Walk) => {
+                next_base_state = BaseState::Loaded(batter, *runner2, *runner3);
             }
-            (BaseState::SecondThird, event::Event::Single) => {
-                self.bases = BaseState::FirstThird;
+            (BaseState::SecondThird(runner2, _), event::Event::Single) => {
+                next_base_state = BaseState::FirstThird(batter, *runner2);
                 runs_scored += 1;
             }
-            (BaseState::SecondThird, event::Event::Double) => {
-                self.bases = BaseState::Second;
+            (BaseState::SecondThird(_, _), event::Event::Double) => {
+                next_base_state = BaseState::Second(batter);
                 runs_scored += 2;
             }
-            (BaseState::SecondThird, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::SecondThird(_, _), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 2;
             }
-            (BaseState::SecondThird, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::SecondThird(_, _), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 3;
             }
-            (BaseState::SecondThird, _) => {}
-            (BaseState::Loaded, event::Event::Walk) => {
-                self.bases = BaseState::Loaded;
+            (BaseState::SecondThird(_, _), _) => {}
+            (BaseState::Loaded(runner1, runner2, _), event::Event::Walk) => {
+                next_base_state = BaseState::Loaded(batter, *runner1, *runner2);
                 runs_scored += 1;
             }
-            (BaseState::Loaded, event::Event::Single) => {
-                self.bases = BaseState::Loaded;
+            (BaseState::Loaded(runner1, runner2, _), event::Event::Single) => {
+                next_base_state = BaseState::Loaded(batter, *runner1, *runner2);
                 runs_scored += 1;
             }
-            (BaseState::Loaded, event::Event::Double) => {
-                self.bases = BaseState::SecondThird;
+            (BaseState::Loaded(runner1, _, _), event::Event::Double) => {
+                next_base_state = BaseState::SecondThird(batter, *runner1);
                 runs_scored += 2;
             }
-            (BaseState::Loaded, event::Event::Triple) => {
-                self.bases = BaseState::Third;
+            (BaseState::Loaded(_, _, _), event::Event::Triple) => {
+                next_base_state = BaseState::Third(batter);
                 runs_scored += 3;
             }
-            (BaseState::Loaded, event::Event::HomeRun) => {
-                self.bases = BaseState::Empty;
+            (BaseState::Loaded(_, _, _), event::Event::HomeRun) => {
+                next_base_state = BaseState::Empty;
                 runs_scored += 4;
             }
-            (BaseState::Loaded, _) => {}
+            (BaseState::Loaded(_, _, _), _) => {}
         }
 
-        return runs_scored;
+        return (runs_scored, next_base_state);
     }
 
     fn add_runs(&mut self, runs: u8) {
